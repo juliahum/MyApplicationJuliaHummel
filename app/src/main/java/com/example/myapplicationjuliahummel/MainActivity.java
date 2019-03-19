@@ -1,13 +1,12 @@
+//JUlIA HUMMEL 01611871
 package com.example.myapplicationjuliahummel;
 
 import android.os.AsyncTask;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
-
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -17,7 +16,7 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -32,6 +31,55 @@ public class MainActivity extends AppCompatActivity {
         eingabetext = findViewById(R.id.editText);
         ausgabetext = findViewById(R.id.textAusgabe);
 
+    }
+    //Klasse für die Anfrage an den Server
+    class AnfrageServer extends AsyncTask<Void, Void, String> {
+        Socket socket;
+        DataOutputStream dataOutputStream;
+        BufferedReader bufferedReader;
+        String ergebnis;
+        String matriklNr;
+
+        String hostid = "se2-isys.aau.at";
+        int port = 53212;
+
+        //Abstrakt Methode doInBackground muss überschrieben werden für die Hintergrundberechnung
+        @Override
+        public String doInBackground(Void... voids) {
+            matriklNr = eingabetext.getText().toString(); //Holen der Matrikelnummer
+
+            try {
+                socket = new Socket(hostid, port);
+                //Erstelle Data-Output-Stream
+                dataOutputStream = new DataOutputStream(socket.getOutputStream());
+
+                //Erstelle Input Stream
+                bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+                //Schick die Zeile zum Server
+                dataOutputStream.writeBytes(matriklNr + '\n');
+
+                //Antwort vom Server bekommen
+                ergebnis = bufferedReader.readLine();
+
+                socket.close();
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return ergebnis;
+        }
+        @Override
+        public void onPostExecute(String ergebnis){
+            ausgabetext.setText("Ergebnis: " +ergebnis);
+        }
+    }
+
+    //OnClick button zum Senden der Matrikelnummer
+    public void button_onClick(View view){
+
+            new AnfrageServer().execute();
     }
 
 
